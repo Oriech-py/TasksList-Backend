@@ -1,15 +1,19 @@
-from flask import Flask
 from flask import Flask, g
 
 from dotenv import load_dotenv
 import os
-from database.db import get_db
+from database.db import create_tables, get_db
+from routes.users_route import users_route
 
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+
 app = Flask(__name__)
+
+
+app.register_blueprint(users_route)
 
 
 @app.route('/')
@@ -31,12 +35,24 @@ def select1():
     return str(result)
 
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
+# @app.teardown_appcontext
+# def close_connection(exception):
+#     db = getattr(g, 'db', None)
+#     if db is not None:
+#         db.close()
+
+
+def init_app():
+    # ...
+
+    tables_created = os.getenv("TABLES_CREATED")
+
+    if tables_created == "False":
+        with app.app_context():
+            # db = get_db()
+            create_tables()
 
 
 if __name__ == "__main__":
+    init_app()
     app.run(debug=True)
